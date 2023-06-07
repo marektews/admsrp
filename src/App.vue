@@ -1,16 +1,16 @@
 <script setup>
-import { ref, watch, computed, onMounted, onUnmounted, initCustomFormatter } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import DeleteModal from './components/DeleteModal.vue'
 
 const srp_list_orig = ref([])
-const srp_list_filtered = ref([])
+const srp_list_filtered = ref(undefined)
 const zbory_list = ref([])
 const deletingItem = ref(undefined)
 const search = ref('')
 const timer = ref(null)
 
 const srp_list = computed(() => {
-    return srp_list_filtered.value.length ? srp_list_filtered.value : srp_list_orig.value
+    return srp_list_filtered.value != undefined ? srp_list_filtered.value : srp_list_orig.value
 })
 
 onMounted(() => {
@@ -39,11 +39,15 @@ watch(search, (nv) => {
                 if(item.regnum1.toLowerCase().includes(nv)) return true
                 if(item.regnum2?.toLowerCase().includes(nv)) return true
                 if(item.regnum3?.toLowerCase().includes(nv)) return true
+                if(item.pass_nr == nv) return true
+                
+                let tmp = zbor_info(item.zbor_id)
+                if(tmp?.toLowerCase().includes(nv)) return true
                 return false
             })
         }
         else
-            srp_list_filtered.value = []
+            srp_list_filtered.value = undefined
         timer.value = null
     }, 500)
 })
@@ -82,7 +86,10 @@ function onDelete(srp) {
 
 <template>
     <header>
-        <div class="title">Identyfikatory parkingowe - tryb moderatora</div>
+        <div class="d-flex flex-row align-items-center">
+            <img src="@/assets/Parking_icon.svg" width="40" height="40" />
+            <span class="ms-2 title">Identyfikatory parkingowe - tryb moderatora</span>
+        </div>
         <div>
             <div class="input-group ">
                 <span class="input-group-text">
@@ -101,7 +108,7 @@ function onDelete(srp) {
         </div>
     </header>
 
-    <main>
+    <main class="mt-3">
         <table class="table table-dark table-bordered">
             <thead>
                 <tr>
@@ -117,7 +124,7 @@ function onDelete(srp) {
                     <th>Niedziela</th>
                 </tr>
             </thead>
-            <tbody v-if="srp_list.length === 0">
+            <tbody v-if="srp_list_orig.length === 0">
                 <tr>
                     <td colspan="7">
                         <div class="d-inline-flex flex-row align-items-center">
@@ -174,7 +181,7 @@ header {
 }
 
 .title {
-    font-size: 1.7rem;
+    font-size: 1.5rem;
 }
 
 td, th {
