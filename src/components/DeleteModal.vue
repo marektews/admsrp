@@ -1,5 +1,8 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+
 
 defineEmits(['ok'])
 const props = defineProps(['record'])
@@ -20,14 +23,14 @@ const isOkEnabled = computed(() => {
 
                 <div class="modal-body">
                     <p>
-                        <b>Czy na pewno skasować ten wpis?</b>
+                        <strong>Czy na pewno skasować ten wpis?</strong>
                     </p>
-                    <p>
-                        <div>Potwierdź wpisując numer rejestracyjny pojazdu: <b>{{ props.record?.regnum1 }}</b></div>
+                    <div>
+                        <div>Potwierdź wpisując numer rejestracyjny pojazdu: <strong>{{ props.record?.regnum1 }}</strong></div>
                         <div>
                             <input class="form-control" v-model="confirmationData" type="text" />
                         </div>
-                    </p>
+                    </div>
                 </div>
 
                 <div class="modal-footer">
@@ -46,8 +49,7 @@ const isOkEnabled = computed(() => {
                         :disabled="!isOkEnabled"
                         @click="$emit('ok', props.record)"
                     >
-                        <i class="fa-solid fa-trash" />
-                        Usuń
+                        <FontAwesomeIcon :icon="faTrash" /> Usuń
                     </button>
                 </div>
             </div>

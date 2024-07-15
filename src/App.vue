@@ -1,5 +1,7 @@
 <script setup>
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faMagnifyingGlass, faXmark, faTrash } from '@fortawesome/free-solid-svg-icons';
 import DeleteModal from './components/DeleteModal.vue'
 
 const srp_list_orig = ref([])
@@ -93,7 +95,7 @@ function onDelete(srp) {
         <div>
             <div class="input-group ">
                 <span class="input-group-text">
-                    <i class="fa-solid fa-magnifying-glass" />
+                    <FontAwesomeIcon :icon="faMagnifyingGlass" />
                 </span>
                 <input
                     v-model="search"
@@ -102,7 +104,7 @@ function onDelete(srp) {
                     placeholder="Wpisz ciąg filtrowania" 
                 />
                 <button class="btn btn-secondary" @click="search = ''">
-                    <i class="fa-solid fa-xmark" />
+                    <FontAwesomeIcon :icon="faXmark" />
                 </button>
             </div>
         </div>
@@ -155,7 +157,7 @@ function onDelete(srp) {
                             data-bs-toggle="modal"
                             data-bs-target="#deleteModal"
                         >
-                            <i class="fa-solid fa-trash" />
+                            <FontAwesomeIcon :icon="faTrash" />
                         </button>
                     </td>
                 </tr>
