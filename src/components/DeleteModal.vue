@@ -1,18 +1,3 @@
-<script setup>
-import { ref, computed } from 'vue'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { faTrash } from '@fortawesome/free-solid-svg-icons';
-
-
-defineEmits(['ok'])
-const props = defineProps(['record'])
-const confirmationData = ref('')
-
-const isOkEnabled = computed(() => {
-    return confirmationData.value === props.record?.regnum1
-})
-</script>
-
 <template>
     <div class="modal fade" tabindex="-1">
         <div class="modal-dialog">
@@ -22,14 +7,14 @@ const isOkEnabled = computed(() => {
                 </div>
 
                 <div class="modal-body">
-                    <p>
+                    <h4>
                         <strong>Czy na pewno skasować ten wpis?</strong>
-                    </p>
-                    <div>
-                        <div>Potwierdź wpisując numer rejestracyjny pojazdu: <strong>{{ props.record?.regnum1 }}</strong></div>
-                        <div>
-                            <input class="form-control" v-model="confirmationData" type="text" />
-                        </div>
+                    </h4>
+                    <div class="mt-4">
+                        <label class="form-label">
+                            Potwierdź wpisując numer rejestracyjny pojazdu: <strong>{{ props.record?.regnum1 }}</strong>
+                        </label>
+                        <input class="form-control" v-model="confirmationData" type="text" />
                     </div>
                 </div>
 
@@ -57,14 +42,18 @@ const isOkEnabled = computed(() => {
     </div>
 </template>
 
-<style>
-@media (prefers-color-scheme: dark) {
-    div.modal-content {
-        background-color: var(--color-background) !important;
-    }
 
-    .btn-close {
-        color: var(--color-text) !important;
-    }
-}
-</style>
+<script setup>
+import { ref, computed } from 'vue'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
+import { faTrash } from '@fortawesome/free-solid-svg-icons';
+
+
+defineEmits(['ok'])
+const props = defineProps(['record'])
+const confirmationData = ref('')
+
+const isOkEnabled = computed(() => {
+    return confirmationData.value === props.record?.regnum1
+})
+</script>
