@@ -1,12 +1,14 @@
 <script setup>
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
-import { faMagnifyingGlass, faXmark, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faMagnifyingGlass, faXmark, faTrash, faWheelchair } from '@fortawesome/free-solid-svg-icons';
 import DeleteModal from './components/DeleteModal.vue'
+import TuraRadioGroup from './components/TuraGroup.vue'
 
 const srp_list_orig = ref([])
 const srp_list_filtered = ref(undefined)
 const zbory_list = ref([])
+const tury_list = ref([])
 const deletingItem = ref(undefined)
 const search = ref('')
 const timer = ref(null)
@@ -17,9 +19,18 @@ const srp_list = computed(() => {
 })
 
 onMounted(() => {
+    fetch('/api/config/all')
+    .then(response => response.json())
+    .then(d => {
+        console.log("cfg:", d)
+        tury_list.value = d.tury
+    })
+    .catch(err => console.error('Load config exception:', err))
+
     fetch('/api/srp/zbory')
     .then(response => response.json())
     .then(d => {
+        console.log("zbory:", d)
         zbory_list.value = d
         load_all_srp()
     })
@@ -51,33 +62,35 @@ watch(filter_tura, (nv) => {
     }, 500)
 })
 
-function filtering(pattern, tura) {
+function filtering(pattern, tid) {
     let list = []
-
-    if(pattern.length) {
+    
+    if(pattern.length > 0) {
         pattern = pattern.toLowerCase()
+
         list = srp_list_orig.value.filter((item) => {
-            if(tura !== "ALL") {
-                let dep_tura = zbor_tura(item.zbor_id)
-                if(dep_tura !== tura)
+
+            if(tid != "ALL") {
+                const dep_tura = zbor_tura(item.congregation_id)?.tid
+                if(dep_tura != tid)
                     return false
             }
 
-            if(item.regnum1.toLowerCase().includes(pattern)) return true
-            if(item.regnum2?.toLowerCase().includes(pattern)) return true
-            if(item.regnum3?.toLowerCase().includes(pattern)) return true
-            if(item.pass_nr == pattern) return true
+            if(item.car1.regnum.toLowerCase().includes(pattern)) return true
+            if(item.car2 && item.car2.regnum.toLowerCase().includes(pattern)) return true
+            if(item.car3 && item.car3.regnum.toLowerCase().includes(pattern)) return true
+            // if(item.pass_nr != pattern) return true
             
-            let tmp = zbor_info(item.zbor_id)
-            if(tmp?.toLowerCase().includes(pattern)) return true
+            const tmp = zbor_info(item.congregation_id)
+            if(tmp.toLowerCase().includes(pattern)) return true
             return false
         })
     }
     else {
         list = srp_list_orig.value.filter((item) => {
-            if(tura !== "ALL") {
-                let dep_tura = zbor_tura(item.zbor_id)
-                if(dep_tura !== tura)
+            if(tid !== "ALL") {
+                const dep_tura = zbor_tura(item.congregation_id)?.tid
+                if(dep_tura != tid)
                     return false
             }
             return true
@@ -85,13 +98,13 @@ function filtering(pattern, tura) {
     }
 
     list.sort((a,b) => {
-        let dep_tura_a = zbor_tura(a.zbor_id)
-        let dep_tura_b = zbor_tura(b.zbor_id)
-        let tmp = dep_tura_a.localeCompare(dep_tura_b)
+        const dep_tura_a = zbor_tura(a.congregation_id).shortcut
+        const dep_tura_b = zbor_tura(b.congregation_id).shortcut
+        const tmp = dep_tura_a.localeCompare(dep_tura_b)
         if(tmp !== 0) return tmp
 
-        let zb_name_a = zbor_name(a.zbor_id)
-        let zb_name_b = zbor_name(b.zbor_id)
+        const zb_name_a = zbor_name(a.congregation_id)
+        const zb_name_b = zbor_name(b.congregation_id)
         return zb_name_a.localeCompare(zb_name_b)
     })
 
@@ -108,20 +121,21 @@ function load_all_srp() {
     .catch(err => console.error('Load all SRP exception:', err))
 }
 
-function zbor_info(zbor_id) {
-    let zbor = zbory_list.value.find((item) => item.id === zbor_id)
+function zbor_info(congregation_id) {
+    let zbor = zbory_list.value.find((item) => item.id === congregation_id)
     if(zbor == undefined) return ""
     return zbor.lang + " - " + zbor.number + " - " + zbor.name
 }
 
-function zbor_tura(zbor_id) {
-    let zbor = zbory_list.value.find((item) => item.id === zbor_id)
-    if(zbor == undefined) return ""
-    return `W${zbor.tura}`
+function zbor_tura(congregation_id) {
+    const zbor = zbory_list.value.find((item) => item.id === congregation_id)
+    if(zbor == undefined) return undefined
+    const tura = tury_list.value.find(item => item.tid === zbor.tura)
+    return tura
 }
 
-function zbor_name(zbor_id) {
-    let zbor = zbory_list.value.find((item) => item.id === zbor_id)
+function zbor_name(congregation_id) {
+    let zbor = zbory_list.value.find((item) => item.id === congregation_id)
     if(zbor == undefined) return ""
     return zbor.name
 }
@@ -149,23 +163,13 @@ function onDelete(srp) {
     <header>
         <div class="d-flex flex-row align-items-center">
             <img src="@/assets/Parking_icon.svg" width="40" height="40" />
-            <span class="ms-2 title">Identyfikatory parkingowe Lodowisko - tryb moderatora</span>
+            <div class="ms-2">
+                <div class="title">Identyfikatory parkingowe - niepełnosprawni</div>
+                <div class="text-muted">Tryb moderatora</div>
+            </div>
         </div>
 
-        <div class="tura-radio-group">
-            <div class="form-check">
-                <input v-model="filter_tura" value="ALL" class="form-check-input" type="radio" name="tura" id="tura_all">
-                <label class="form-check-label" for="tura_all">Wszystko</label>
-            </div>
-            <div class="form-check">
-                <input v-model="filter_tura" value="W2" class="form-check-input" type="radio" name="tura" id="tura_w2">
-                <label class="form-check-label" for="tura_w2">W2</label>
-            </div>
-            <div class="form-check">
-                <input v-model="filter_tura" value="W3" class="form-check-input" type="radio" name="tura" id="tura_w3">
-                <label class="form-check-label" for="tura_w3">W3</label>
-            </div>
-        </div>
+        <TuraRadioGroup v-model="filter_tura" class="tura-radio-group" />
 
         <div>
             <div class="input-group ">
@@ -186,7 +190,7 @@ function onDelete(srp) {
     </header>
 
     <main class="mt-3">
-        <table class="table table-dark table-bordered">
+        <table class="table table-dark table-bordered table-hover table-sm">
             <thead>
                 <tr>
                     <th rowspan="2">#</th>
@@ -204,7 +208,7 @@ function onDelete(srp) {
             </thead>
             <tbody v-if="srp_list_orig.length === 0">
                 <tr>
-                    <td colspan="7">
+                    <td colspan="8">
                         <div class="d-inline-flex flex-row align-items-center">
                             <div class="spinner-border" role="status" />
                             <div class="ms-3">Proszę czekać. Trwa ładowanie danych ...</div>
@@ -215,16 +219,31 @@ function onDelete(srp) {
             <tbody v-else>
                 <tr v-for="(srp, index) in srp_list" :key="index">
                     <th>{{ index+1 }}</th>
-                    <td>{{ zbor_info(srp.zbor_id) }}</td>
-                    <td>{{ zbor_tura(srp.zbor_id) }}</td>
+                    <td>
+                        {{ zbor_info(srp.congregation_id) }}
+                        <FontAwesomeIcon v-if="srp.smr" class="ms-1 text-warning" :icon="faWheelchair" />
+                    </td>
+                    <td>{{ zbor_tura(srp.congregation_id).shortcut }}</td>
                     <td>{{ srp.pass_nr }}</td>
                     <template v-if="srp.regnum2?.length">
-                        <td>{{ srp.regnum1 }}</td>
-                        <td>{{ srp.regnum2 }}</td>
-                        <td>{{ srp.regnum3 }}</td>
+                        <td>
+                            {{ srp.car1.regnum }}
+                            <span v-if="srp.car1.lpg" class="ms-1 text-warning">(LPG)</span>
+                        </td>
+                        <td>
+                            {{ srp.car2?.regnum }}
+                            <span v-if="srp.car2?.lpg" class="ms-1 text-warning">(LPG)</span>
+                        </td>
+                        <td>
+                            {{ srp.car3?.regnum }}
+                            <span v-if="srp.car3?.lpg" class="ms-1 text-warning">(LPG)</span>                           
+                        </td>
                     </template>
                     <template v-else>
-                        <td colspan="3">{{ srp.regnum1 }}</td>
+                        <td colspan="3">
+                            {{ srp.car1.regnum }}
+                            <span v-if="srp.car1.lpg" class="ms-1 text-warning">(LPG)</span>
+                        </td>
                     </template>
                     <td>
                         <button type="button"

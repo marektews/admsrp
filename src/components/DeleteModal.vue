@@ -12,7 +12,7 @@
                     </h4>
                     <div class="mt-4">
                         <label class="form-label">
-                            Potwierdź wpisując numer rejestracyjny pojazdu: <strong>{{ props.record?.regnum1 }}</strong>
+                            Potwierdź wpisując numer rejestracyjny pojazdu: <strong>{{ props.record?.car1.regnum }}</strong>
                         </label>
                         <input class="form-control" v-model="confirmationData" type="text" />
                     </div>
@@ -54,6 +54,6 @@ const props = defineProps(['record'])
 const confirmationData = ref('')
 
 const isOkEnabled = computed(() => {
-    return confirmationData.value === props.record?.regnum1
+    return confirmationData.value === props.record?.car1.regnum
 })
 </script>
