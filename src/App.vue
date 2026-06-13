@@ -220,12 +220,16 @@ function onDelete(srp) {
                 <tr v-for="(srp, index) in srp_list" :key="index">
                     <th>{{ index+1 }}</th>
                     <td>
-                        {{ zbor_info(srp.congregation_id) }}
-                        <FontAwesomeIcon v-if="srp.smr" class="ms-1 text-warning" :icon="faWheelchair" />
+                        <span title="Pasażer lub kierowca ze szczególnymi ograniczeniami ruchowymi">
+                            {{ zbor_info(srp.congregation_id) }}
+                        </span>
+                        <span title="Pasażer lub kierowca ze szczególnymi ograniczeniami ruchowymi">
+                            <FontAwesomeIcon v-if="srp.smr" class="ms-1 text-warning" :icon="faWheelchair" />
+                        </span>
                     </td>
                     <td>{{ zbor_tura(srp.congregation_id).shortcut }}</td>
                     <td>{{ srp.pass_nr }}</td>
-                    <template v-if="srp.regnum2?.length">
+                    <template v-if="'car2' in srp">
                         <td>
                             {{ srp.car1.regnum }}
                             <span v-if="srp.car1.lpg" class="ms-1 text-warning">(LPG)</span>
